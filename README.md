@@ -1,4 +1,4 @@
-<div style="display: flex; align-items: center; justify-content: center; font-size: 2em;"><img src="./static/img/favicon.svg" width = "45" height = "45" alt="logo" /><strong>&nbsp;Gait Recognition System</strong></div>
+# <div style="display: flex; align-items: center; justify-content: center;"><img src="./static/img/favicon.svg" width="50" height="50" alt="icon" style="vertical-align: middle;"/>&nbsp;Gait Recognition System</div>
 
 <div align="center">Human Gait Recognition and Comparison System Based on Deep Learning</div>
 
