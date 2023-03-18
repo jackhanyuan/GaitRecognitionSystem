@@ -1,14 +1,19 @@
-# GaitRecognitionSystem
+# <div style="display: flex; align-items: center; justify-content: left;"><img src="./static/img/favicon.svg" width = "45" height = "45" alt="logo" />&nbsp;Gait Recognition System</div>
+
 Human Gait Recognition and Comparison System Based on Deep Learning
 
-## requirements
+<div align="center"><img src="./static/img/gait-demo.png" width = "1980" height = "" alt="Gait recognition system demo" /></div>
+
+---
+
+## Requirements
 
 ```sh
 pip install -r requirements.txt
 ```
 Please download the [latest release model](https://github.com/jackhanyuan/GaitRecognitionSystem/releases/latest), and unzip the compressed file to `model\gait\output`.
 
-## run
+## Run
 ```shell
 python main.py
 ```
@@ -21,6 +26,7 @@ Web access: `http://localhost:5000/`
 - [classification-pytorch](https://github.com/bubbliiiing/classification-pytorch)
 - [YOLOv5](https://github.com/ultralytics/yolov5)
 - [OpenGait](https://github.com/ShiqiYu/OpenGait)
+- [GaitRecognition](https://github.com/hongyonghan/GaitRecognition)
 
 ## Citation
 
