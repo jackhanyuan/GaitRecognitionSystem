@@ -1,8 +1,8 @@
-# <div style="display: flex; align-items: center; justify-content: left;"><img src="./static/img/favicon.svg" width = "45" height = "45" alt="logo" />&nbsp;Gait Recognition System</div>
+<h1 style="display: flex; align-items: center; justify-content: center;"><img src="./static/img/favicon.svg" width = "45" height = "45" alt="logo" />&nbsp;Gait Recognition System</h1>
 
-Human Gait Recognition and Comparison System Based on Deep Learning
+<div align="center">Human Gait Recognition and Comparison System Based on Deep Learning</div>
 
-<div align="center"><img src="./static/img/gait-demo.png" width = "1980" height = "" alt="Gait recognition system demo" /></div>
+<div align="center"><img src="./static/img/gait-demo.png" width = "1980" height = "" alt="Gait recognition system demo" style="border: 1px solid #ffc107;" /></div>
 
 ---
 
@@ -49,4 +49,4 @@ Web access: `http://localhost:5000/`
 ```
 
 **Note:**
-GaitPretreatment is only used for **academic purposes**.
+Gait Recognition and Comparison System is only used for **personal academic purposes**, people cannot use this code for anything that might be considered commercial use.
