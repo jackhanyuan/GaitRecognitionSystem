@@ -1,8 +1,8 @@
-# <div style="display: flex; align-items: center; justify-content: center;"><img src="./static/img/favicon.svg" width="50" height="50" alt="icon" style="vertical-align: middle;"/>&nbsp;Gait Recognition System</div>
+# <div align="center" style="display: flex; align-items: center; justify-content: center;"><img src="./static/img/favicon.svg" width="50" height="50" alt="icon" style="vertical-align: middle;"/>&nbsp;Gait Recognition System</div>
 
 <div align="center">Human Gait Recognition and Comparison System Based on Deep Learning</div>
 
-<div align="center"><img src="./static/img/gait-demo.png" width="100%" alt="Gait recognition system demo" style="border: 1px solid #ffc107;" /></div>
+<div align="center"><img src="./static/img/gait-demo.png" style="border: 1px solid #ffc107;" box-sizing: border-box; width="100%" alt="Gait recognition system demo"/></div>
 
 ---
 
