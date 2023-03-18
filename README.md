@@ -11,7 +11,7 @@
 ```sh
 pip install -r requirements.txt
 ```
-Please download the [latest release model](https://github.com/jackhanyuan/GaitRecognitionSystem/releases/latest), and unzip the compressed file to `model\gait\output`.
+Please download the [latest release model](https://github.com/jackhanyuan/GaitRecognitionSystem/releases/latest), and unzip the compressed file to `model/gait/output`.
 
 ## Run
 ```shell
