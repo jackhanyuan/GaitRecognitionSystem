@@ -1,0 +1,72 @@
+# Note  : *** the batch_size should be equal to the gpus number at the test phase!!! ***
+data_cfg:
+  dataset_name: HID # Mixed
+  dataset_root: datasets/real-pkl-64
+  dataset_partition: datasets/real.json
+  num_workers: 0 # 16
+  remove_no_gallery: false # Remove probe if no gallery for it
+  test_dataset_name: Real # OUMVLP # HID #
+
+evaluator_cfg:
+  enable_distributed: true
+  enable_float16: false
+  restore_ckpt_strict: true
+  restore_hint: 160000
+  save_name: GaitGL-HID2
+  eval_func: evaluate_similarity # evaluate_dist # identification #
+  re_rank: false
+  sampler:
+    batch_size: 1 # 2
+    sample_type: all_ordered
+    type: InferenceSampler
+  metric: euc # cos
+
+loss_cfg:
+  - loss_term_weight: 1.0
+    margin: 0.2
+    type: TripletLoss
+    log_prefix: triplet
+  - loss_term_weight: 1.0
+    scale: 1
+    type: CrossEntropyLoss
+    log_accuracy: true
+    label_smooth: true
+    log_prefix: softmax
+
+model_cfg:
+  model: GaitGL
+  channels: [32, 64, 128, 256]
+  class_num: 500 # 5153 #
+
+optimizer_cfg:
+  lr: 1.0e-4
+  solver: Adam
+  weight_decay: 0
+
+scheduler_cfg:
+  gamma: 0.1
+  milestones:
+    - 100000 # 150000
+    - 140000 # 200000
+  scheduler: MultiStepLR
+
+trainer_cfg:
+  enable_distributed: true
+  enable_float16: true
+  with_test: false
+  log_iter: 100
+  restore_ckpt_strict: true
+  restore_hint: 0
+  save_iter: 5000
+  save_name: GaitGL-HID
+  sync_BN: true
+  total_iter: 160000 # 210000
+  sampler:
+    batch_shuffle: true
+    batch_size:
+      - 8 # 32
+      - 8
+    frames_num_fixed: 30
+    frames_skip_num: 500
+    sample_type: fixed_ordered
+    type: TripletSampler
