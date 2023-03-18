@@ -2,7 +2,7 @@
 
 <div align="center">Human Gait Recognition and Comparison System Based on Deep Learning</div>
 
-<div align="center"><img src="./static/img/gait-demo.png" style="border: 1px solid #ffc107;" box-sizing: border-box; width="100%" alt="Gait recognition system demo"/></div>
+<div align="center"><img src="./static/img/gait-demo.png" style="border: 1px solid #ffc107; box-sizing: border-box;" width="100%" alt="Gait recognition system demo"/></div>
 
 ---
 
