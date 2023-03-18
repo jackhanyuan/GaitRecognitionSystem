@@ -26,7 +26,8 @@ def yolov5_detect_person(img, label):
     if person_count > 1:
         label = ''
 
-    img_bgr = cv2.cvtColor(results.render(label)[0], cv2.COLOR_RGB2BGR)
+    # labels : True -> YOLOv5 original label; '' -> no label ; str -> str label
+    img_bgr = cv2.cvtColor(results.render(labels=label)[0], cv2.COLOR_RGB2BGR)
 
     # cv2.imwrite("test.jpg", img_bgr)
 
