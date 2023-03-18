@@ -1,0 +1,16 @@
+<div style="margin-top: 20px;">
+    <form action="/recognition" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="recFile">Recognition Video File</label>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="recFile" name="recFile" accept="video/*" oninput="updateLab(this.value, 'recLab')">
+                <label id="recLab" class="custom-file-label" for="recFile">Choose Video File</label>
+            </div>
+            <small id="fileHelp" class="form-text text-muted">Video processing takes a while, please be patient!</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Start Recognition</button>
+    </form>
+</div>
+
+<script type="text/javascript" src="/static/js/update_label.js"></script>

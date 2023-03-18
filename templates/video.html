@@ -1,0 +1,140 @@
+{% extends 'layout.html' %}
+
+
+{% block body %}
+    <div class="row p-0 m-0">
+
+        <div class="col-6 mt-5">
+            <div class="table-responsive border border-warning" style="padding: 10px 10px 10px 10px;">
+                <div>
+                    <!-- video trigger modal -->
+                    <img class="img-responsive img-thumbnail" data-toggle="modal" data-target="#modal-video" width="500" height="320"  src="{{ url_for('video_feed') }}">
+                    <!-- Modal -->
+                    <div class="modal fade" id="modal-video" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="videoModalLabel">Video</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-content p-3">
+                                        <img src="{{ url_for('video_feed') }}" class="img-fluid">
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="text-center p-1 mt-2 mb-3 bg-danger text-white">Gait Recognition Results</h5>
+                    <strong id="gaitResult" >Waiting for the result of Gait Recognition Server...</strong>
+                    <div class="d-flex justify-content-center">
+                        <div id="spinner1" class="spinner-border text-dark my-2" role="status" aria-hidden="true" style="display: block;"></div>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-primary mt-3" type="button" data-toggle="collapse" data-target="#collapse-silhouette" aria-expanded="true" aria-controls="collapseExample">
+                        Silhouettes
+                    </button>
+                    <button class="btn btn-primary mt-3 ml-2" type="button" data-toggle="collapse" data-target="#collapse-image" aria-expanded="false" aria-controls="collapseExample2">
+                        Alpha Images
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 mt-5">
+            <div class="table-responsive border border-warning" style="padding: 10px 10px 10px 10px;">
+                <h5 class="text-center p-1 mb-1 bg-success text-white">Gait Similarity Results</h5>
+                <table id="table" class="table text-center table-striped table-dark table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">Rank</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Vid</th>
+                            <th scope="col">Dist</th>
+                            <th scope="col">Similarity (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                    </tbody>
+                </table>
+                <div class="d-flex justify-content-center mb-2">
+                    <div id="spinner2" class="spinner-border text-dark my-2" role="status" aria-hidden="true" style="display: block;"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row p-0 m-0">
+
+        <div class="collapse multi-collapse" id="collapse-silhouette">
+            <div class="col-12 mt-4 mb-2">
+               <div class="border border-warning mx-auto" style="padding: 10px 10px 10px 10px;">
+                   {% for cut_image_path in cut_images %}
+                        <!-- img trigger modal -->
+                        <img class="img-responsive img-thumbnail m-1" data-toggle="modal" data-target="#modal-silhouette-{{loop.index}}" width="120" height="120" src={{cut_image_path}} alt="">
+                        <!-- Modal -->
+                        <div class="modal fade" id="modal-silhouette-{{loop.index}}" tabindex="-1" aria-labelledby="silhouetteModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="silhouetteModalLabel">{{cut_image_path.split('/')[-1]}}</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-content p-3">
+                                        <img src={{cut_image_path}} class="img-fluid">
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                   {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="collapse multi-collapse" id="collapse-image">
+            <div class="col-12 mt-4 mb-2">
+               <div class="border border-warning mx-auto" style="padding: 10px 10px 10px 10px;">
+                   {% for image_path in images %}
+                        <!-- img trigger modal -->
+                        <img class="img-responsive img-thumbnail m-1" data-toggle="modal" data-target="#modal-image-{{loop.index}}" width="120" height="120" src={{image_path}} alt="">
+                        <!-- Modal -->
+                        <div class="modal fade" id="modal-image-{{loop.index}}" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="imageModalLabel">{{image_path.split('/')[-1]}}</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-content p-3">
+                                        <img src={{image_path}} class="img-fluid">
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                   {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="text/javascript" src="/static/js/gait_recognition.js"></script>
+{% endblock %}
+

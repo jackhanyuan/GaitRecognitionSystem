@@ -1,0 +1,17 @@
+<nav>
+    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <a class="nav-item nav-link active" id="nav-registration-tab" data-toggle="tab" href="#nav-registration" role="tab"
+            aria-controls="nav-home" aria-selected="true">Gait Registration</a>
+        <a class="nav-item nav-link" id="nav-recognition-tab" data-toggle="tab" href="#nav-recognition" role="tab"
+            aria-controls="nav-recognition" aria-selected="false">Gait Recognition</a>
+    </div>
+</nav>
+
+<div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane fade show active" id="nav-registration" role="tabpanel" aria-labelledby="nav-registration-tab">
+        {% include 'includes/gait_registration.html' %}
+    </div>
+    <div class="tab-pane fade" id="nav-recognition" role="tabpanel" aria-labelledby="nav-recognition-tab">
+        {% include 'includes/gait_recognition.html' %}
+    </div>
+</div>
