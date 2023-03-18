@@ -137,7 +137,7 @@ def run_opengait():
 
             res[i][label] = res[i].pop(j)
             if not person_label_exists and res[i][label]["similarity"] > 0.5:
-                person_label.append(pname)
+                person_label.append(pname + ' {:.2f}%'.format(100*res[i][label]["similarity"]))
                 person_label_exists = True
 
     res = "data: " + json.dumps(res[i]) + "\n\n"
@@ -161,6 +161,7 @@ def get_video_frame():
         #     time.sleep(0.1)
         if not label and person_label:
             label = person_label.pop(0)
+            # print(f"{label=}")
         frame = yolov5_detect_person(frame, label)
 
         (flag, encodedImage) = cv2.imencode(".jpg", frame)
