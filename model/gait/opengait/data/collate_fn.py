@@ -79,8 +79,7 @@ class CollateFn(object):
                     replace = seq_len < frames_num
 
                     if seq_len == 0:
-                        msg_mgr = get_msg_mgr()
-                        msg_mgr.log_debug('Find no frames in the sequence %s-%s-%s.'
+                        get_msg_mgr().log_debug('Find no frames in the sequence %s-%s-%s.'
                                                 % (str(labs_batch[count]), str(typs_batch[count]), str(vies_batch[count])))
 
                     count += 1

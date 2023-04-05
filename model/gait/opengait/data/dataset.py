@@ -119,9 +119,7 @@ class DataSet(tordata.Dataset):
                         else:
                             msg_mgr.log_debug(
                                 'Find no .pkl file in %s-%s-%s.' % (lab, typ, vie))
-
             return seqs_info_list
-
 
         self.seqs_info = get_seqs_info_list(
             train_set) if training else get_seqs_info_list(test_set)

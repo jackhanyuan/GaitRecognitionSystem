@@ -11,10 +11,10 @@ class Plain(nn.Module):
     """
     The Plain backbone class.
 
-    An implicit LeakyRelu appended to each layer except maxPooling.
+    An implicit LeakyRelu appended to each layer except maxPooling. 
     The kernel size, stride and padding of the first convolution layer are 5, 1, 2, the ones of other layers are 3, 1, 1.
 
-    Typical usage:
+    Typical usage: 
     - BC-64: Basic conv2d with output channel 64. The input channel is the output channel of previous layer.
 
     - M: nn.MaxPool2d(kernel_size=2, stride=2)].

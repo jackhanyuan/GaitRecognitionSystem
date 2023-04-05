@@ -7,6 +7,8 @@ import numpy as np
 import torch.nn as nn
 import torch.autograd as autograd
 import yaml
+import random
+from torch.nn.parallel import DistributedDataParallel as DDP
 from collections import OrderedDict, namedtuple
 
 
@@ -41,9 +43,9 @@ def Ntuple(description, keys, values):
 
 def get_valid_args(obj, input_args, free_keys=[]):
     if inspect.isfunction(obj):
-        expected_keys = inspect.getargspec(obj)[0]
+        expected_keys = inspect.getfullargspec(obj)[0]
     elif inspect.isclass(obj):
-        expected_keys = inspect.getargspec(obj.__init__)[0]
+        expected_keys = inspect.getfullargspec(obj.__init__)[0]
     else:
         raise ValueError('Just support function and class object!')
     unexpect_keys = list()
@@ -101,8 +103,7 @@ def ts2np(x):
 
 
 def ts2var(x, **kwargs):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    return autograd.Variable(x, **kwargs).to(device)
+    return autograd.Variable(x, **kwargs).cuda()
 
 
 def np2var(x, **kwargs):
@@ -137,10 +138,66 @@ def clones(module, N):
 def config_loader(path):
     with open(path, 'r') as stream:
         src_cfgs = yaml.safe_load(stream)
-    with open("./config/default.yaml", 'r') as stream:
+    with open("./configs/default.yaml", 'r') as stream:
         dst_cfgs = yaml.safe_load(stream)
     MergeCfgsDict(src_cfgs, dst_cfgs)
     return dst_cfgs
+
+
+def init_seeds(seed=0, cuda_deterministic=True):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # Speed-reproducibility tradeoff https://pytorch.org/docs/stable/notes/randomness.html
+    if cuda_deterministic:  # slower, more reproducible
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    else:  # faster, less reproducible
+        torch.backends.cudnn.deterministic = False
+        torch.backends.cudnn.benchmark = True
+
+
+def handler(signum, frame):
+    logging.info('Ctrl+c/z pressed')
+    os.system(
+        "kill $(ps aux | grep main.py | grep -v grep | awk '{print $2}') ")
+    logging.info('process group flush!')
+
+
+def ddp_all_gather(features, dim=0, requires_grad=True):
+    '''
+        inputs: [n, ...]
+    '''
+
+    world_size = torch.distributed.get_world_size()
+    rank = torch.distributed.get_rank()
+    feature_list = [torch.ones_like(features) for _ in range(world_size)]
+    torch.distributed.all_gather(feature_list, features.contiguous())
+
+    if requires_grad:
+        feature_list[rank] = features
+    feature = torch.cat(feature_list, dim=dim)
+    return feature
+
+
+# https://github.com/pytorch/pytorch/issues/16885
+class DDPPassthrough(DDP):
+    def __getattr__(self, name):
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            return getattr(self.module, name)
+
+
+def get_ddp_module(module, **kwargs):
+    if len(list(module.parameters())) == 0:
+        # for the case that loss module has not parameters.
+        return module
+    device = torch.cuda.current_device()
+    module = DDPPassthrough(module, device_ids=[device], output_device=device,
+                            find_unused_parameters=False, **kwargs)
+    return module
 
 
 def params_count(net):

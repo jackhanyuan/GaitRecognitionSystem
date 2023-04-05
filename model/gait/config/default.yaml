@@ -1,9 +1,8 @@
-# The final parameter is merged with the default.yaml
 data_cfg:
   dataset_name: CASIA-B
-  dataset_root: CASIA-B-pkl # your_path
-  dataset_partition: ./misc/partitions/my-CASIA-B.json # ./misc/partitions/CASIA-B.json
+  dataset_root: your_path
   num_workers: 1
+  dataset_partition: ./datasets/CASIA-B/CASIA-B.json
   remove_no_gallery: false
   cache: false
   test_dataset_name: CASIA-B
@@ -13,15 +12,15 @@ evaluator_cfg:
   restore_ckpt_strict: true
   restore_hint: 80000
   save_name: tmp
-  eval_func: identification
+  eval_func: evaluate_indoor_dataset
   sampler:
     batch_size: 4
     sample_type: all_ordered
     type: InferenceSampler
   transform:
-    - img_w: 64
-      type: BaseSilCuttingTransform
-  metric: euc # cos # euc
+      - type: BaseSilCuttingTransform
+  metric: euc # cos
+  cross_view_gallery: false
 
 loss_cfg:
   loss_term_weight: 1.0
@@ -70,5 +69,4 @@ trainer_cfg:
     sample_type: fixed_unordered
     type: TripletSampler
   transform:
-    - img_w: 64
-      type: BaseSilCuttingTransform
+      - type: BaseSilCuttingTransform

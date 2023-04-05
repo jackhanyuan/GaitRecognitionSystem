@@ -3,6 +3,7 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 from tools import clones, is_list_or_tuple
+from torchvision.ops import RoIAlign
 
 
 class HorizontalPoolingPyramid():
@@ -38,14 +39,14 @@ class SetBlockWrapper(nn.Module):
 
     def forward(self, x, *args, **kwargs):
         """
-            In  x: [n, s, c, h, w]
-            Out x: [n, s, ...]
+            In  x: [n, c_in, s, h_in, w_in]
+            Out x: [n, c_out, s, h_out, w_out]
         """
-        n, s, c, h, w = x.size()
-        x = self.forward_block(x.view(-1, c, h, w), *args, **kwargs)
-        input_size = x.size()
-        output_size = [n, s] + [*input_size[1:]]
-        return x.view(*output_size)
+        n, c, s, h, w = x.size()
+        x = self.forward_block(x.transpose(
+            1, 2).reshape(-1, c, h, w), *args, **kwargs)
+        output_size = x.size()
+        return x.reshape(n, s, *output_size[1:]).transpose(1, 2).contiguous()
 
 
 class PackSequenceWrapper(nn.Module):
@@ -53,26 +54,20 @@ class PackSequenceWrapper(nn.Module):
         super(PackSequenceWrapper, self).__init__()
         self.pooling_func = pooling_func
 
-    def forward(self, seqs, seqL, seq_dim=1, **kwargs):
+    def forward(self, seqs, seqL, dim=2, options={}):
         """
-            In  seqs: [n, s, ...]
+            In  seqs: [n, c, s, ...]
             Out rets: [n, ...]
         """
         if seqL is None:
-            return self.pooling_func(seqs, **kwargs)
+            return self.pooling_func(seqs, **options)
         seqL = seqL[0].data.cpu().numpy().tolist()
         start = [0] + np.cumsum(seqL).tolist()[:-1]
 
         rets = []
         for curr_start, curr_seqL in zip(start, seqL):
-            narrowed_seq = seqs.narrow(seq_dim, curr_start, curr_seqL)
-            # save the memory
-            # splited_narrowed_seq = torch.split(narrowed_seq, 256, dim=1)
-            # ret = []
-            # for seq_to_pooling in splited_narrowed_seq:
-            #     ret.append(self.pooling_func(seq_to_pooling, keepdim=True, **kwargs)
-            #                [0] if self.is_tuple_result else self.pooling_func(seq_to_pooling, **kwargs))
-            rets.append(self.pooling_func(narrowed_seq, **kwargs))
+            narrowed_seq = seqs.narrow(dim, curr_start, curr_seqL)
+            rets.append(self.pooling_func(narrowed_seq, **options))
         if len(rets) > 0 and is_list_or_tuple(rets[0]):
             return [torch.cat([ret[j] for ret in rets])
                     for j in range(len(rets[0]))]
@@ -101,18 +96,20 @@ class SeparateFCs(nn.Module):
 
     def forward(self, x):
         """
-            x: [p, n, c]
+            x: [n, c_in, p]
+            out: [n, c_out, p]
         """
+        x = x.permute(2, 0, 1).contiguous()
         if self.norm:
             out = x.matmul(F.normalize(self.fc_bin, dim=1))
         else:
             out = x.matmul(self.fc_bin)
-        return out
+        return out.permute(1, 2, 0).contiguous()
 
 
 class SeparateBNNecks(nn.Module):
     """
-        GaitSet: Bag of Tricks and a Strong Baseline for Deep Person Re-Identification
+        Bag of Tricks and a Strong Baseline for Deep Person Re-Identification
         CVPR Workshop:  https://openaccess.thecvf.com/content_CVPRW_2019/papers/TRMTMCT/Luo_Bag_of_Tricks_and_a_Strong_Baseline_for_Deep_Person_CVPRW_2019_paper.pdf
         Github: https://github.com/michuanhaohao/reid-strong-baseline
     """
@@ -133,27 +130,32 @@ class SeparateBNNecks(nn.Module):
 
     def forward(self, x):
         """
-            x: [p, n, c]
+            x: [n, c, p]
         """
         if self.parallel_BN1d:
-            p, n, c = x.size()
-            x = x.transpose(0, 1).contiguous().view(n, -1)  # [n, p*c]
+            n, c, p = x.size()
+            x = x.view(n, -1)  # [n, c*p]
             x = self.bn1d(x)
-            x = x.view(n, p, c).permute(1, 0, 2).contiguous()
+            x = x.view(n, c, p)
         else:
-            x = torch.cat([bn(_.squeeze(0)).unsqueeze(0)
-                           for _, bn in zip(x.split(1, 0), self.bn1d)], 0)  # [p, n, c]
+            x = torch.cat([bn(_x) for _x, bn in zip(
+                x.split(1, 2), self.bn1d)], 2)  # [p, n, c]
+        feature = x.permute(2, 0, 1).contiguous()
         if self.norm:
-            feature = F.normalize(x, dim=-1)  # [p, n, c]
+            feature = F.normalize(feature, dim=-1)  # [p, n, c]
             logits = feature.matmul(F.normalize(
                 self.fc_bin, dim=1))  # [p, n, c]
         else:
-            feature = x
             logits = feature.matmul(self.fc_bin)
-        return feature, logits
+        return feature.permute(1, 2, 0).contiguous(), logits.permute(1, 2, 0).contiguous()
 
 
 class FocalConv2d(nn.Module):
+    """
+        GaitPart: Temporal Part-based Model for Gait Recognition
+        CVPR2020: https://openaccess.thecvf.com/content_CVPR_2020/papers/Fan_GaitPart_Temporal_Part-Based_Model_for_Gait_Recognition_CVPR_2020_paper.pdf
+        Github: https://github.com/ChaoFan96/GaitPart
+    """
     def __init__(self, in_channels, out_channels, kernel_size, halving, **kwargs):
         super(FocalConv2d, self).__init__()
         self.halving = halving
@@ -184,6 +186,66 @@ class BasicConv3d(nn.Module):
         '''
         outs = self.conv3d(ipts)
         return outs
+
+
+class GaitAlign(nn.Module):
+    """
+        GaitEdge: Beyond Plain End-to-end Gait Recognition for Better Practicality
+        ECCV2022: https://arxiv.org/pdf/2203.03972v2.pdf
+        Github: https://github.com/ShiqiYu/OpenGait/tree/master/configs/gaitedge
+    """
+    def __init__(self, H=64, W=44, eps=1, **kwargs):
+        super(GaitAlign, self).__init__()
+        self.H, self.W, self.eps = H, W, eps
+        self.Pad = nn.ZeroPad2d((int(self.W / 2), int(self.W / 2), 0, 0))
+        self.RoiPool = RoIAlign((self.H, self.W), 1, sampling_ratio=-1)
+
+    def forward(self, feature_map, binary_mask, w_h_ratio):
+        """
+           In  sils:         [n, c, h, w]
+               w_h_ratio:    [n, 1]
+           Out aligned_sils: [n, c, H, W]
+        """
+        n, c, h, w = feature_map.size()
+        # w_h_ratio = w_h_ratio.repeat(1, 1) # [n, 1]
+        w_h_ratio = w_h_ratio.view(-1, 1)  # [n, 1]
+
+        h_sum = binary_mask.sum(-1)  # [n, c, h]
+        _ = (h_sum >= self.eps).float().cumsum(axis=-1)  # [n, c, h]
+        h_top = (_ == 0).float().sum(-1)  # [n, c]
+        h_bot = (_ != torch.max(_, dim=-1, keepdim=True)
+                 [0]).float().sum(-1) + 1.  # [n, c]
+
+        w_sum = binary_mask.sum(-2)  # [n, c, w]
+        w_cumsum = w_sum.cumsum(axis=-1)  # [n, c, w]
+        w_h_sum = w_sum.sum(-1).unsqueeze(-1)  # [n, c, 1]
+        w_center = (w_cumsum < w_h_sum / 2.).float().sum(-1)  # [n, c]
+
+        p1 = self.W - self.H * w_h_ratio
+        p1 = p1 / 2.
+        p1 = torch.clamp(p1, min=0)  # [n, c]
+        t_w = w_h_ratio * self.H / w
+        p2 = p1 / t_w  # [n, c]
+
+        height = h_bot - h_top  # [n, c]
+        width = height * w / h  # [n, c]
+        width_p = int(self.W / 2)
+
+        feature_map = self.Pad(feature_map)
+        w_center = w_center + width_p  # [n, c]
+
+        w_left = w_center - width / 2 - p2  # [n, c]
+        w_right = w_center + width / 2 + p2  # [n, c]
+
+        w_left = torch.clamp(w_left, min=0., max=w+2*width_p)
+        w_right = torch.clamp(w_right, min=0., max=w+2*width_p)
+
+        boxes = torch.cat([w_left, h_top, w_right, h_bot], dim=-1)
+        # index of bbox in batch
+        box_index = torch.arange(n, device=feature_map.device)
+        rois = torch.cat([box_index.view(-1, 1), boxes], -1)
+        crops = self.RoiPool(feature_map, rois)  # [n, c, H, W]
+        return crops
 
 
 def RmBN2dAffine(model):
