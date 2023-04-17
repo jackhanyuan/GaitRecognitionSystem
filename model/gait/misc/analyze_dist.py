@@ -245,8 +245,8 @@ def draw_distribution_histogram(nums, save_path, xlabel, ylabel, title, stat="co
     sns.histplot(data=nums, stat=stat, bins=bins, binwidth=binwidth, binrange=binrange,
                  kde=is_kde, cumulative=is_cumulative, line_kws=dict(), color="steelblue")
     
-    # 设置字体
-    plt.rcParams['font.sans-serif'] = 'times new roman'
+    # 设置
+    # plt.rcParams['font.sans-serif'] = 'times new roman'
     plt.xlim(xmin=0, xmax=26)
     plt.xticks(range(0, 28, 2))
     
