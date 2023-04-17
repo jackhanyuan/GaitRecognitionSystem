@@ -10,9 +10,9 @@ from config import conf
 from database import get_pname_from_vid
 from util.pretreatment import imgs_to_pickle
 from util.general import md5_file, copy_file, rename_dir_file, del_file, time_sync
-from model.gait.main import opengait_main
 from model.person_ext.rvm.person_ext import person_ext_rvm
 from model.person_det.yolov5.detect_person import yolov5_detect_person
+from model.gait.main import opengait_main
 from database import person_register, md5_exists
 from werkzeug.utils import secure_filename
 

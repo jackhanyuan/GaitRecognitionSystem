@@ -14,9 +14,7 @@ parser.add_argument('--log_to_file', action='store_true',
 parser.add_argument('--device', default='0', type=str, help='device id, 0 or 1 or 0,1')
 opt = parser.parse_args()
 
-# opt.cfgs = "configs/baseline/baseline_hid.yaml"
-# opt.cfgs = "configs/gaitgl/gaitgl.yaml"
-opt.cfgs = "configs/gaitgl/gaitgl_HID.yaml"
+opt.cfgs = "configs/gaitgl/gaitgl_HID_OutdoorGait_CASIA-B_OUMVLP.yaml"
 opt.log_to_file = False
 
 

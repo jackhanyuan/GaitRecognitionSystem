@@ -50,7 +50,7 @@ class Classify:
         pool.join()
 
 
-def read(csv_path, dataset):
+def read(csv_path, dataset, metric):
     print(f"[{get_time()}] Start reading file.")
     # 分块读, 避免卡死
     df_chunk = pd.read_csv(csv_path[0], index_col=0, on_bad_lines='skip', chunksize=100000)
@@ -78,11 +78,13 @@ def read(csv_path, dataset):
     columns = sorted(set(df.columns.values.tolist()))
 
     print(f"[{get_time()}] Classify data.")
-    op = Classify(index, columns, df, worker=16)
+    op = Classify(index, columns, df, worker=8)
     op.flow()
     import itertools
     same_group_data = np.array(list(itertools.chain.from_iterable(op.same_group_data)))
+    same_group_data = same_group_data[~np.isnan(same_group_data)]
     diff_group_data = np.array(list(itertools.chain.from_iterable(op.diff_group_data)))
+    diff_group_data = diff_group_data[~np.isnan(diff_group_data)]
     del op
 
     # 数据多的时候处理太慢
@@ -104,8 +106,12 @@ def read(csv_path, dataset):
     # count
     print()
     print(f"[{get_time()}] Count.")
-    scale = 0.01
+    
+    scale = 0.1 if metric == "euc" else 0.01
+    
     path = os.path.join("dist_result/" + dataset + "/" + dataset + "-")
+    os.makedirs(os.path.join("dist_result", dataset), exist_ok=True)
+    
     value_count(same_group_data, scale, path)
     value_count(diff_group_data, scale, path)
     print()
@@ -140,10 +146,10 @@ def read(csv_path, dataset):
     print()
     print(f"[{get_time()}] Fit.")
     print(f"[{get_time()}] same_group:")
-    # data_fit(same_group_data)
+    data_fit(same_group_data, path)
     print()
     print(f"[{get_time()}] diff_group:")
-    # data_fit(diff_group_data)
+    data_fit(diff_group_data, path)
     print(f"[{get_time()}] Done!")
 
 
@@ -183,7 +189,7 @@ def get_p_value(arrA, arrB):
     return p
 
 
-def data_fit(data):
+def data_fit(data, path):
     # distributions = None  # 默认尝试80种分布
     distributions = ["norm", "t", "laplace", "cauchy", "chi2", "expon", "exponpow", "gamma", "lognorm", "powerlaw", "rayleigh", "uniform", "johnsonsb", "gausshyper", "beta", "genextreme", "weibull_max", "geninvgauss", "genhyperbolic", "logistic", "gumbel_r", "burr", "mielke", "nct"]
     f = Fitter(data, distributions=distributions, timeout=10000)  # 创建Fitter类
@@ -191,7 +197,7 @@ def data_fit(data):
     
     f.summary()  # 输出拟合结果
     save_path = str(len(data)) + ".jpg"
-    plt.savefig(f"f-summary-" + save_path, dpi=300)
+    plt.savefig(path + "f-summary-" + save_path, dpi=300)
     plt.show()
     plt.cla()
     print(f"f.summary():")
@@ -204,14 +210,16 @@ def data_fit(data):
     print(f"f.df_errors:")
     print(f"{f.df_errors}")
     print(f"{f.fitted_param['logistic']=}")  # 指定"logistic"分布的参数
+    print(f"{f.fitted_param['t']=}")  # 指定"t"分布的参数
+    print(f"{f.fitted_param['johnsonsb']=}")  # 指定"johnsonsb"分布的参数
     
     f.hist()  # 样本数据的 normed histogram(面积为1的直方图)
-    plt.savefig("f-hist-" + save_path, dpi=300)
+    plt.savefig(path + "f-hist-" + save_path, dpi=300)
     plt.show()
     plt.cla()
     
     f.plot_pdf(Nbest=2, lw=2, method='sumsquare_error')  # Nbest 绘制前几名; lw 宽度; 绘制拟合分布的PDF(概率密度函数)
-    plt.savefig("f-nbest-pdf-" + save_path, dpi=300)
+    plt.savefig(path + "f-nbest-pdf-" + save_path, dpi=300)
     plt.show()
     plt.cla()
 
@@ -236,7 +244,12 @@ def draw_distribution_histogram(nums, save_path, xlabel, ylabel, title, stat="co
     sns.set()  # 切换到sns的默认运行配置
     sns.histplot(data=nums, stat=stat, bins=bins, binwidth=binwidth, binrange=binrange,
                  kde=is_kde, cumulative=is_cumulative, line_kws=dict(), color="steelblue")
-
+    
+    # 设置
+    # plt.rcParams['font.sans-serif'] = 'times new roman'
+    plt.xlim(xmin=0, xmax=26)
+    plt.xticks(range(0, 28, 2))
+    
     # 添加x轴和y轴标签
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
@@ -251,62 +264,12 @@ def draw_distribution_histogram(nums, save_path, xlabel, ylabel, title, stat="co
 
 
 if __name__ == '__main__':
-    path1 = [
-        "dist_result/CASIA/2022-0327-223557-train_CASIA-B-test_CASIA-B-restore_80000-rerank_False.csv",
-        "dist_result/CASIA/2022-0327-223558-train_CASIA-B-test_CASIA-B-restore_80000-rerank_False.csv"
-    ]
-    path1 = [
-        "dist_result/CASIA/2022-0331-161557-train_CASIA-B-test_CASIA-B-restore_80000-rerank_False-full.csv",
-        "dist_result/CASIA/2022-0331-161610-train_CASIA-B-test_CASIA-B-restore_80000-rerank_False-full.csv"
-    ]
-    path1 = [
-        "dist_result/CASIA/2022-0408-130004-train_OUMVLP-test_CASIA-B-restore_260000-rerank_False.csv",
-        "dist_result/CASIA/2022-0408-130008-train_OUMVLP-test_CASIA-B-restore_260000-rerank_False.csv"
-    ]
-    dataset1 = "CASIA"
-    
-    path2 = [
-        "dist_result/OUMVLP/2022-0331-212003-train_OUMVLP-test_OUMVLP-restore_260000-rerank_False.csv",
-        "dist_result/OUMVLP/2022-0331-212127-train_OUMVLP-test_OUMVLP-restore_260000-rerank_False.csv"
-    ]
-    path2 = [
-        "dist_result/OUMVLP/2022-0401-104502-train_OUMVLP-test_OUMVLP-restore_260000-rerank_False-16793.csv",
-        "dist_result/OUMVLP/2022-0401-105427-train_OUMVLP-test_OUMVLP-restore_260000-rerank_False-16793.csv"
-    ]
-    dataset2 = "OUMVLP"
-    # 0.25
-    path3 = [
-        "dist_result/test25/2022-0408-100357-train_OUMVLP-test_CASIA-B-restore_85000-rerank_False.csv",
-        "dist_result/test25/2022-0408-100401-train_OUMVLP-test_CASIA-B-restore_85000-rerank_False.csv"
-    ]
-    # 0.3
-    path3 = [
-        "dist_result/test3/2022-0408-111921-train_OUMVLP-test_CASIA-B-restore_85000-rerank_False.csv",
-        "dist_result/test3/2022-0408-111925-train_OUMVLP-test_CASIA-B-restore_85000-rerank_False.csv"
-    ]
-    # 0.4
-    path3 = [
-        "dist_result/test4/2022-0409-132541-train_OUMVLP-test_CASIA-B-restore_120000-rerank_False.csv",
-        "dist_result/test4/2022-0409-132546-train_OUMVLP-test_CASIA-B-restore_120000-rerank_False.csv"
-    ]
-    # 0.1
-    path3 = [
-        "dist_result/test1/2022-0409-134533-train_OUMVLP-test_CASIA-B-restore_120000-rerank_False.csv",
-        "dist_result/test1/2022-0409-134539-train_OUMVLP-test_CASIA-B-restore_120000-rerank_False.csv"
-    ]
-    dataset3 = "CASIA"
-    
-    # 0.1
-    path4 = [
-        "dist_result/test1/2022-0409-182509-train_OUMVLP-test_OUMVLP-restore_120000-rerank_False.csv",
-        "dist_result/test1/2022-0409-182530-train_OUMVLP-test_OUMVLP-restore_120000-rerank_False.csv"
-    ]
-    # 0.4
-    path = [
-        "dist_result/test4/2022-0411-003116-train_OUMVLP-test_OUMVLP-restore_150000-rerank_False.csv",
-        "dist_result/test4/2022-0411-003141-train_OUMVLP-test_OUMVLP-restore_150000-rerank_False.csv"
-    ]
-    dataset = "OUMVLP"
-    
 
-    read(path, dataset)
+    path = [
+        "dist_result/HID_OutdoorGait-euc/dist-2023-0417-145535-train_gaitgl_HID_OutdoorGait_CASIA-B_OUMVLP-test_HID_OutdoorGait-restore_170000-rerank_False-euc.csv",
+        "dist_result/HID_OutdoorGait-euc/res-2023-0417-145545-train_gaitgl_HID_OutdoorGait_CASIA-B_OUMVLP-test_HID_OutdoorGait-restore_170000-rerank_False-euc.csv"
+    ]
+    dataset = "HID_OutdoorGait"
+    metric = "euc"
+    
+    read(path, dataset, metric)
