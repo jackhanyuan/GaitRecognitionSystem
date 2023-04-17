@@ -19,6 +19,8 @@ python main.py
 ```
 Web access: `http://localhost:5000/`
 
+**Note:** Please complete the gait registration first and ensure that the video in the database is greater than 0. Then you can start gait recognition!
+
 ## Acknowledgement
 
 - [GaitPretreatment](https://github.com/jackhanyuan/GaitPretreatment)
