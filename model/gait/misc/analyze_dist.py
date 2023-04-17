@@ -245,8 +245,8 @@ def draw_distribution_histogram(nums, save_path, xlabel, ylabel, title, stat="co
     sns.histplot(data=nums, stat=stat, bins=bins, binwidth=binwidth, binrange=binrange,
                  kde=is_kde, cumulative=is_cumulative, line_kws=dict(), color="steelblue")
     
-    # 设置
-    # plt.rcParams['font.sans-serif'] = 'times new roman'
+    # 设置字体
+    plt.rcParams['font.sans-serif'] = 'times new roman'
     plt.xlim(xmin=0, xmax=26)
     plt.xticks(range(0, 28, 2))
     
@@ -269,7 +269,7 @@ if __name__ == '__main__':
         "dist_result/HID_OutdoorGait-euc/dist-2023-0417-145535-train_gaitgl_HID_OutdoorGait_CASIA-B_OUMVLP-test_HID_OutdoorGait-restore_170000-rerank_False-euc.csv",
         "dist_result/HID_OutdoorGait-euc/res-2023-0417-145545-train_gaitgl_HID_OutdoorGait_CASIA-B_OUMVLP-test_HID_OutdoorGait-restore_170000-rerank_False-euc.csv"
     ]
-    dataset = "HID_OutdoorGait"
+    dataset = "HID_OutdoorGait-euc"
     metric = "euc"
     
     read(path, dataset, metric)

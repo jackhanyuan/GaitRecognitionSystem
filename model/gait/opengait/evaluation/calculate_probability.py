@@ -12,7 +12,7 @@ def calc_same_group_probability(x):
 
 def calc_diff_group_probability(x):
     # HID500-OutdoorGait138
-    args = {'a': -6.5782410560868385, 'b': 95.75613055419649, 'loc': -148.47793130445035, 'scale': 304.2028069752622}
+    args = {'a': 22.195523809517333, 'b': 27.46516021982316, 'loc': -48.1526371634257, 'scale': 205.14459476282795}
     res = johnsonsb.cdf(x=x, **args)
 
     return res
@@ -29,7 +29,7 @@ def calc_similarity(dist, w1=1.0, w2=0):
 
 
 if __name__ == '__main__':
-    w1, w2 = 1.0, 0
+    w1, w2 = 1.0, 0.0
     dict = {}
     for dist in np.arange(0., 26.0, 0.01):
         res = calc_similarity(dist, w1, w2)
