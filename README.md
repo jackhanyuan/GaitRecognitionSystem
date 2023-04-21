@@ -19,7 +19,11 @@ python main.py
 ```
 Web access: `http://localhost:5000/`
 
-**Note:** Please complete the gait registration first and ensure that the video in the database is greater than 0. Then you can start gait recognition!
+**Notes:** 
+
+- Please complete the gait registration first and ensure that the video in the database is greater than 0. Then you can start gait recognition!
+
+- Please make sure there is only one person in the video. The version of multi-person will be updated later.
 
 ## Acknowledgement
 
