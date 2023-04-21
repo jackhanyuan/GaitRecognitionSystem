@@ -12,6 +12,7 @@ from util.pretreatment import imgs_to_pickle
 from util.general import md5_file, copy_file, rename_dir_file, del_file, time_sync
 from model.person_ext.rvm.person_ext import person_ext_rvm
 from model.person_det.yolov5.detect_person import yolov5_detect_person
+# from model.person_det.yolov8.detect_person import yolov5_detect_person
 from model.gait.main import opengait_main
 from database import person_register, md5_exists
 from werkzeug.utils import secure_filename
@@ -163,6 +164,7 @@ def get_video_frame():
             label = person_label.pop(0)
             # print(f"{label=}")
         frame = yolov5_detect_person(frame, label)
+        # frame = yolov8_detect_person(frame, label)
 
         (flag, encodedImage) = cv2.imencode(".jpg", frame)
         if not flag:
